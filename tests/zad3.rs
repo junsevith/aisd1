@@ -6,8 +6,7 @@ use aisd1::double;
 
 #[test]
 fn merge_test() {
-    println!("Cyclic list:");
-
+    println!("Double linked circular list:");
     let mut list1 = double::CyclicList::new();
     let mut list2 = double::CyclicList::new();
     let mut rng = rand::thread_rng();
@@ -28,8 +27,6 @@ fn merge_test() {
 
 #[test]
 fn lookup_test() {
-    println!();
-    println!("Looking for elements in list");
     let mut list = double::CyclicList::new();
     let mut nums = Vec::new();
     let mut rng = rand::thread_rng();
@@ -55,7 +52,7 @@ fn lookup_test() {
     println!("Average 2: {:?}", avg / 1000);
 }
 
-fn random_find(list: &double::CyclicList<i32>, num: i32, mut rng: &mut ThreadRng) -> usize {
+fn random_find(list: &double::CyclicList<i32>, num: i32, rng: &mut ThreadRng) -> usize {
     if rng.gen_bool(0.5) {
         // println!("Forward");
         list.find_forward(num).unwrap()

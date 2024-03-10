@@ -4,8 +4,7 @@ use aisd1::cycle;
 
 #[test]
 fn merge_test() {
-    println!("Cyclic list:");
-
+    println!("Single linked circular list:");
     let mut list1 = cycle::CyclicList::new();
     let mut list2 = cycle::CyclicList::new();
     let mut rng = rand::thread_rng();
@@ -26,8 +25,6 @@ fn merge_test() {
 
 #[test]
 fn lookup_test() {
-    println!();
-    println!("Looking for elements in list");
     let mut list = cycle::CyclicList::new();
     let mut nums = Vec::new();
     let mut rng = rand::thread_rng();
