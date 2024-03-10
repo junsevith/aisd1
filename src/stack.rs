@@ -1,27 +1,27 @@
-pub(crate) struct Queue<T> {
-    first: Option<Box<QueueElement<T>>>,
+pub struct Stack<T> {
+    top: Option<Box<StackElement<T>>>,
 
 }
 
-struct QueueElement<T> {
+struct StackElement<T> {
     element: T,
-    next: Option<Box<QueueElement<T>>>,
+    next: Option<Box<StackElement<T>>>,
 }
 
-impl <T> Queue<T> {
-    pub(crate) fn new() -> Queue<T> {
-        Queue {
-            first: None,
+impl <T> Stack<T> {
+    pub fn new() -> Stack<T> {
+        Stack {
+            top: None,
         }
     }
-    pub(crate) fn enqueue(&mut self, element: T) {
-        self.first = Some(Box::new(QueueElement::new(element, self.first.take())));
+    pub fn push(&mut self, element: T) {
+        self.top = Some(Box::new(StackElement::new(element, self.top.take())));
 
     }
-    pub(crate) fn dequeue(&mut self) -> Option<T> {
-        match self.first.take() {
+    pub fn pop(&mut self) -> Option<T> {
+        match self.top.take() {
             Some(element) => {
-                self.first = element.next;
+                self.top = element.next;
                 Some(element.element)
             }
             None => None,
@@ -29,9 +29,9 @@ impl <T> Queue<T> {
     }
 }
 
-impl <T> QueueElement<T> {
-    fn new(element: T, next: Option<Box<QueueElement<T>>>) -> QueueElement<T> {
-        QueueElement {
+impl <T> StackElement<T> {
+    fn new(element: T, next: Option<Box<StackElement<T>>>) -> StackElement<T> {
+        StackElement {
             element,
             next,
         }

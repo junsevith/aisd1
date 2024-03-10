@@ -9,6 +9,7 @@ pub struct CyclicList<T> {
 struct CycleElement<T> {
     element: T,
     next: RefCell<Option<Rc<CycleElement<T>>>>,
+    prev: RefCell<Option<Rc<CycleElement<T>>>>,
 }
 
 impl<T> CyclicList<T> {
@@ -25,13 +26,13 @@ impl<T> CyclicList<T> {
             Some(ref head) => {
                 match &*head.next.borrow() {
                     Some(ref next) => {
-                        element.connect(next);
+                        CycleElement::connect(&element, next);
                     }
                     None => {
-                        element.connect(head)
+                        CycleElement::connect(&element, head);
                     }
                 }
-                head.connect(&element);
+                CycleElement::connect(head, &element);
             }
             None => {}
         }
@@ -77,8 +78,8 @@ impl<T> CyclicList<T> {
                             }
                         }
 
-                        first_end.connect(&second_beginning);
-                        second_end.connect(&first_beginning);
+                        CycleElement::connect(first_end, &second_beginning);
+                        CycleElement::connect(second_end, &first_beginning);
 
                         self.head = second.head;
                     }
@@ -127,7 +128,7 @@ impl<T: Clone> CyclicList<T> {
 }
 
 impl<T: Eq> CyclicList<T> {
-    pub fn find(&self, template: T) -> Option<usize> {
+    pub fn find_forward(&self, template: T) -> Option<usize> {
         let mut count: usize = 0;
         match self.head.as_ref() {
             None => { None }
@@ -155,6 +156,35 @@ impl<T: Eq> CyclicList<T> {
             }
         }
     }
+
+    pub fn find_backward(&self, template: T) -> Option<usize> {
+        let mut count: usize = 0;
+        match self.head.as_ref() {
+            None => { None }
+            Some(head) => {
+                let mut current = head.clone();
+                loop {
+                    if current.element == template {
+                        return Some(count);
+                    }
+                    match current.prev() {
+                        None => {
+                            // return None;
+                            return Some(count);
+                        }
+                        Some(prev) => {
+                            current = prev;
+                        }
+                    }
+                    count += 1;
+                    if Rc::ptr_eq(&current, &head) {
+                        // return None;
+                        return Some(count);
+                    }
+                }
+            }
+        }
+    }
 }
 
 impl<T> CycleElement<T> {
@@ -162,6 +192,7 @@ impl<T> CycleElement<T> {
         Rc::new(CycleElement {
             element,
             next: RefCell::new(None),
+            prev: RefCell::new(None),
         })
     }
 
@@ -172,7 +203,15 @@ impl<T> CycleElement<T> {
         }
     }
 
-    fn connect(&self, next: &Rc<Self>) {
-        self.next.replace(Some(Rc::clone(next)));
+    fn prev(&self) -> Option<Rc<Self>> {
+        match *self.prev.borrow() {
+            Some(ref x) => Some(x.clone()),
+            None => None
+        }
+    }
+
+    fn connect(first: &Rc<Self>, second: &Rc<Self>) {
+        first.next.replace(Some(Rc::clone(second)));
+        second.prev.replace(Some(Rc::clone(first)));
     }
 }
