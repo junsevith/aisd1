@@ -18,6 +18,7 @@ fn merge_test() {
         list2.insert(number);
         println!("Added to list 2 {:?}", number);
     }
+    println!("Started merge");
     list1.merge(list2);
     println!("Merged lists");
     println!("{:?}", list1.get_elems());

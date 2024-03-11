@@ -1,5 +1,5 @@
 use std::cell::RefCell;
-use std::rc::Rc;
+use std::rc::{Rc, Weak};
 
 pub struct CyclicList<T> {
     head: Option<Rc<CycleElement<T>>>,
@@ -9,7 +9,7 @@ pub struct CyclicList<T> {
 struct CycleElement<T> {
     element: T,
     next: RefCell<Option<Rc<CycleElement<T>>>>,
-    prev: RefCell<Option<Rc<CycleElement<T>>>>,
+    prev: RefCell<Option<Weak<CycleElement<T>>>>,
 }
 
 impl<T> CyclicList<T> {
@@ -39,7 +39,7 @@ impl<T> CyclicList<T> {
         self.head = Some(Rc::clone(&element));
     }
 
-    pub fn merge(&mut self, second: CyclicList<T>) {
+    pub fn merge(&mut self, mut second: CyclicList<T>) {
 
         match self.head {
 
@@ -81,7 +81,7 @@ impl<T> CyclicList<T> {
                         CycleElement::connect(first_end, &second_beginning);
                         CycleElement::connect(second_end, &first_beginning);
 
-                        self.head = second.head;
+                        self.head = second.head.clone();
                     }
                     // Druga lista jest pusta
                     None => {}
@@ -89,9 +89,12 @@ impl<T> CyclicList<T> {
             }
             // Lista jest pusta
             None => {
-                self.head = second.head;
+                self.head = second.head.clone();
             }
         }
+        // we need to reset the second list head because otherwise
+        // dropping 2nd list will drop elements from the merged list
+        second.head = None;
     }
 }
 
@@ -187,6 +190,20 @@ impl<T: Eq> CyclicList<T> {
     }
 }
 
+impl<T> Drop for CyclicList<T> {
+    fn drop(&mut self) {
+        match self.head {
+            None => {}
+            Some(ref head) => {
+                // when dropping Cyliclist we need to break the cycle
+                // (delete one of the references)
+                // otherwise cyclic references will cause memory leaks
+                head.next.take();
+            }
+        }
+    }
+}
+
 impl<T> CycleElement<T> {
     fn new(element: T) -> Rc<CycleElement<T>> {
         Rc::new(CycleElement {
@@ -205,13 +222,13 @@ impl<T> CycleElement<T> {
 
     fn prev(&self) -> Option<Rc<Self>> {
         match *self.prev.borrow() {
-            Some(ref x) => Some(x.clone()),
+            Some(ref x) => Some(x.upgrade().unwrap().clone()),
             None => None
         }
     }
 
     fn connect(first: &Rc<Self>, second: &Rc<Self>) {
         first.next.replace(Some(Rc::clone(second)));
-        second.prev.replace(Some(Rc::clone(first)));
+        second.prev.replace(Some(Rc::downgrade(first)));
     }
 }
