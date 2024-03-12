@@ -1,5 +1,6 @@
 use rand::prelude::IndexedRandom;
 use rand::Rng;
+
 use aisd1::cycle;
 
 #[test]
@@ -13,6 +14,7 @@ fn merge_test() {
         list1.insert(number);
         println!("Added to list 1 {:?}", number);
     }
+    println!("{:?}", list1.get_elems());
     for _i in 0..10 {
         let number = rng.gen_range(10..99);
         list2.insert(number);
@@ -29,6 +31,7 @@ fn lookup_test() {
     let mut list = cycle::CyclicList::new();
     let mut nums = Vec::new();
     let mut rng = rand::thread_rng();
+    println!("Lookup test");
     for _i in 0..10_000 {
         let number = rng.gen_range(0..100_000);
         list.insert(number);
